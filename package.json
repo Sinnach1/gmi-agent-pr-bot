@@ -1,0 +1,12 @@
+{
+  "name": "gmi-agent-pr-bot",
+  "version": "1.0.0",
+  "description": "AI-powered PR reviewer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.0"
+  }
+}

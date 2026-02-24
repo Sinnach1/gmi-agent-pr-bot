@@ -17,13 +17,54 @@ jobs:
           node-version: '20'
       
       - name: Install dependencies
-        run: npm install
+        run: npm install @octokit/rest
       
       - name: Run PR Review
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APP_ID: ${{ secrets.APP_ID }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         run: |
-          # 여기에 PR 리뷰 로직 추가
-          echo "PR Review triggered for PR #${{ github.event.pull_request.number }}"
+          node -e "
+          const { Octokit } = require('@octokit/rest');
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+          
+          const owner = '${{ github.repository_owner }}';
+          const repo = '${{ github.event.repository.name }}';
+          const pull_number = ${{ github.event.pull_request.number }};
+          
+          // 변경된 파일 가져오기
+          octokit.rest.pulls.listFiles({
+            owner, repo, pull_number
+          }).then(({ data }) => {
+            const comments = [];
+            
+            data.forEach(file => {
+              if (file.filename.endsWith('.js')) {
+                // 간단한 코드 분석
+                if (file.patch.includes('console.log')) {
+                  comments.push({
+                    path: file.filename,
+                    line: 1,
+                    body: '⚠️ console.log 발견! 제거하세요.'
+                  });
+                }
+                if (file.patch.includes('var ')) {
+                  comments.push({
+                    path: file.filename,
+                    line: 1,
+                    body: '💡 var 대신 const/let 사용하세요.'
+                  });
+                }
+              }
+            });
+            
+            // PR에 코멘트 작성
+            if (comments.length > 0) {
+              return octokit.rest.pulls.createReview({
+                owner, repo, pull_number,
+                body: '🤖 GMI Agent 자동 코드 리뷰',
+                event: 'COMMENT',
+                comments: comments
+              });
+            }
+          });
+          "

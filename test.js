@@ -1,8 +1,8 @@
-// 테스트용 버그 코드
+// test.js - 버그 있는 코드
 function test() {
-    console.log("test");
-    var x = 1;
-    if(x == null) {
+    console.log("debug");  // console.log 문제
+    var x = 1;             // var 문제
+    if (x == null) {       // == 문제
         console.log("null");
     }
 }
